@@ -7,12 +7,9 @@ using Android.Widget;
 
 namespace GoogleMapDemo
 {   
-    //public class FusedLocationProviderCallback
     public class FusedLocationProviderCallback : LocationCallback
     {
         readonly MainActivity activity;
-
-
 
         public FusedLocationProviderCallback(MainActivity activity)
         {
