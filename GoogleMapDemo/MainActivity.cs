@@ -27,16 +27,24 @@ namespace GoogleMapDemo
     [Activity(Label = "GoogleMapDemo", MainLauncher = true, Icon = "@mipmap/icon",ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation, ScreenOrientation = ScreenOrientation.Landscape)]
     public class MainActivity : AppCompatActivity,IOnMapReadyCallback
     {
+        public static MainActivity Instance;
+
         //UI
         private DrawerLayout mDrawerLayout;
 
-        const long ONE_MINUTE = 60 * 1000;
-        int count = 1;
-        bool isRequestingLocationUpdates = false;
-        bool isGooglePlayServicesInstalled = false;
-        FusedLocationProviderClient fusedLocationProviderClient;
+        private const long ONE_MINUTE = 60 * 1000;
+        private int count = 1;
+        private bool isRequestingLocationUpdates = false;
+        private bool isGooglePlayServicesInstalled = false;
+        private FusedLocationProviderClient fusedLocationProviderClient;
+        private LocationRequest locationRequest;
+        private LocationCallback locationCallback;
+		private Location fusedLocation;
+		        
+        private GoogleMap _map;
+        public GoogleMap Map { get => _map; }
+        private MapFragment _mapFragment;
 
-        LocationRequest locationRequest;
 
         Button getLastLocationButton;
         internal Button requestLocationUpdatesButton;
@@ -46,12 +54,9 @@ namespace GoogleMapDemo
         internal TextView longitude2;
         internal TextView latitude2;
         internal TextView provider2;
-        LocationCallback locationCallback;
+       
 
-        public static MainActivity Instance;
-
-
-        private void init()
+        private void Init()
         {
             //runtime permission check
             if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.AccessFineLocation) == Permission.Granted)
@@ -64,20 +69,6 @@ namespace GoogleMapDemo
 
             }
             isGooglePlayServicesInstalled = IsGooglePlayServicesInstalled();
-
-            // UI to display last location
-            getLastLocationButton = FindViewById<Button>(Resource.Id.get_last_location_button);
-            latitude = FindViewById<TextView>(Resource.Id.latitude);
-            longitude = FindViewById<TextView>(Resource.Id.longitude);
-            provider = FindViewById<TextView>(Resource.Id.provider);
-
-            // UI to display location updates
-            requestLocationUpdatesButton = FindViewById<Button>(Resource.Id.request_location_updates_button);
-            latitude2 = FindViewById<TextView>(Resource.Id.latitude2);
-            longitude2 = FindViewById<TextView>(Resource.Id.longitude2);
-            provider2 = FindViewById<TextView>(Resource.Id.provider2);
-
-
 
             if (isGooglePlayServicesInstalled)
             {
@@ -98,8 +89,20 @@ namespace GoogleMapDemo
             }
         }
 
+        private void InitCompoment()
+        {
+            // UI to display last location
+            getLastLocationButton = FindViewById<Button>(Resource.Id.get_last_location_button);
+            latitude = FindViewById<TextView>(Resource.Id.latitude);
+            longitude = FindViewById<TextView>(Resource.Id.longitude);
+            provider = FindViewById<TextView>(Resource.Id.provider);
 
-
+            // UI to display location updates
+            requestLocationUpdatesButton = FindViewById<Button>(Resource.Id.request_location_updates_button);
+            latitude2 = FindViewById<TextView>(Resource.Id.latitude2);
+            longitude2 = FindViewById<TextView>(Resource.Id.longitude2);
+            provider2 = FindViewById<TextView>(Resource.Id.provider2);
+        }
 
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
@@ -135,7 +138,33 @@ namespace GoogleMapDemo
 
             //};
 
-            init();
+            Init();
+            InitCompoment();
+
+            DynamicCreateMap();
+           
+        }
+
+        protected override async void OnResume()
+        {
+            base.OnResume();
+
+            await StartRequestingLocationUpdates();
+            await GetLastLocationFromDevice();
+
+            DisplayMap();
+
+
+        }
+
+        public void OnMapReady(GoogleMap googleMap)
+        {
+            _map = googleMap;
+
+        }
+
+        private void DynamicCreateMap()
+        {
             _mapFragment = FragmentManager.FindFragmentByTag("map") as MapFragment;
             if (_mapFragment == null)
             {
@@ -152,23 +181,8 @@ namespace GoogleMapDemo
             _mapFragment.GetMapAsync(this);
         }
 
-        public void OnMapReady(GoogleMap googleMap)
+        private void DisplayMap()
         {
-            _map = googleMap;
-          
-        }
-
-        public GoogleMap _map;
-        MapFragment _mapFragment;
-
-        //protected override void OnResume()
-        protected override async void OnResume()
-        {
-            base.OnResume();
-
-            await StartRequestingLocationUpdates();
-            await GetLastLocationFromDevice();
-
             LatLng location = new LatLng(fusedLocation.Latitude, fusedLocation.Longitude);
             CameraPosition.Builder builder = CameraPosition.InvokeBuilder();
             builder.Target(location);
@@ -184,7 +198,7 @@ namespace GoogleMapDemo
                 Log.Debug("Map", "map is ready now !");
                 //_map.MapType = GoogleMap.MapTypeNormal;
                 MarkerOptions markerOpt1 = new MarkerOptions();
-                markerOpt1.SetPosition(new LatLng(fusedLocation.Latitude,fusedLocation.Longitude));
+                markerOpt1.SetPosition(new LatLng(fusedLocation.Latitude, fusedLocation.Longitude));
                 markerOpt1.SetTitle("ICM Inc");
 
 
@@ -196,6 +210,7 @@ namespace GoogleMapDemo
                 //_map.MoveCamera(cameraUpdate);
             }
         }
+
 
         async Task StartRequestingLocationUpdates()
         {
@@ -252,7 +267,7 @@ namespace GoogleMapDemo
             }
         }
 
-        Location fusedLocation;
+     
 
         async Task GetLastLocationFromDevice()
         {

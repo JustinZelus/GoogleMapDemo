@@ -2,6 +2,7 @@
 using Android.Gms.Location;
 using Android.Gms.Maps;
 using Android.Gms.Maps.Model;
+using Android.Locations;
 using Android.Util;
 using Android.Widget;
 
@@ -30,27 +31,10 @@ namespace GoogleMapDemo
                 activity.latitude2.Text = activity.Resources.GetString(Resource.String.latitude_string, location.Latitude);
                 activity.longitude2.Text = activity.Resources.GetString(Resource.String.longitude_string, location.Longitude);
                 activity.provider2.Text = activity.Resources.GetString(Resource.String.requesting_updates_provider_string, location.Provider);
-                Log.Debug("FusedLocationProviderSample",location.Latitude + " , " + location.Longitude);
 
-                if (MainActivity.Instance._map != null)
-                {
-                    //MarkerOptions markerOpt1 = new MarkerOptions();
-                    //markerOpt1.SetPosition(new LatLng(location.Latitude, location.Longitude));
-                    //markerOpt1.SetTitle("ICM Inc");
+                UpdateLocation(location);
 
-                    CameraPosition.Builder builder = CameraPosition.InvokeBuilder();
-                    builder.Target(new LatLng(location.Latitude, location.Longitude));
-                    builder.Zoom(18);
-                    builder.Bearing(155);
-
-                    CameraPosition cameraPosition = builder.Build();
-                    CameraUpdate cameraUpdate = CameraUpdateFactory.NewCameraPosition(cameraPosition);
-
-
-                    MainActivity.Instance._map.MoveCamera(cameraUpdate);
-
-                    //_map.MoveCamera(cameraUpdate);
-                }
+                Log.Debug("FusedLocationProviderSample", location.Latitude + " , " + location.Longitude);
             }
             else
             {
@@ -60,6 +44,28 @@ namespace GoogleMapDemo
                 activity.requestLocationUpdatesButton.SetText(Resource.String.request_location_button_text);
             }
 
+        }
+
+        private void UpdateLocation(Location location)
+        {
+            if (MainActivity.Instance.Map != null)
+            {
+                //MarkerOptions markerOpt1 = new MarkerOptions();
+                //markerOpt1.SetPosition(new LatLng(location.Latitude, location.Longitude));
+                //markerOpt1.SetTitle("ICM Inc");
+
+                CameraPosition.Builder builder = CameraPosition.InvokeBuilder();
+                builder.Target(new LatLng(location.Latitude, location.Longitude));
+                builder.Zoom(18);
+                builder.Bearing(155);
+
+                CameraPosition cameraPosition = builder.Build();
+                CameraUpdate cameraUpdate = CameraUpdateFactory.NewCameraPosition(cameraPosition);
+
+                MainActivity.Instance.Map.MoveCamera(cameraUpdate);
+
+                //_map.MoveCamera(cameraUpdate);
+            }
         }
     }
 }
